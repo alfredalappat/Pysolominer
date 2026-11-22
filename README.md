@@ -43,6 +43,3 @@ If this lottery ever pays out, a donation is welcome but never required:
 
 👉 BTC = `bc1qjqmgkuu4qefgwpdq24dvmz60pvjnn7egvc4zke`
 
-## Disclaimer
-
-Use at your own risk, on hardware you own, and check the terms of the pool you connect to. No reward is guaranteed.
