@@ -24,7 +24,7 @@ Example pools:
 
 ```
 stratum.ckpool.org:3333
-stratum+tcp://public-pool.io:3333
+public-pool.io:3333
 ```
 
 ## Options
