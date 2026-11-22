@@ -48,6 +48,19 @@ def dsha(b):
     return hashlib.sha256(hashlib.sha256(b).digest()).digest()
 
 
+def nonce_hex(n):
+    """Stratum sends/receives numeric fields (version, ntime, nbits, nonce) as big-endian hex."""
+    return "%08x" % n
+
+
+def build_prefix(job, en1, en2b):
+    """First 76 bytes of the block header for a stratum job (everything except the nonce)."""
+    root = dsha(job.c1 + en1 + en2b + job.c2)
+    for b in job.branch:
+        root = dsha(root + b)
+    return job.ver + job.prev + root + job.ntime_b + job.nbits_b
+
+
 def nbits_to_target(nbits):
     exp = nbits >> 24
     man = nbits & 0xFFFFFF
@@ -345,10 +358,7 @@ class Miner:
     # ---------------- mining ---------------- #
     def make_work(self, job, en2):
         en2b = en2.to_bytes(self.en2_size, "big")
-        root = dsha(job.c1 + self.en1 + en2b + job.c2)
-        for b in job.branch:
-            root = dsha(root + b)
-        header = job.ver + job.prev + root + job.ntime_b + job.nbits_b   # 76 bytes
+        header = build_prefix(job, self.en1, en2b)            # 76 bytes
         return hashlib.sha256(header[:64]), header[64:], en2b.hex()
 
     def hash_chunk(self, job, mid, tail, en2_hex, start, count):
@@ -374,7 +384,7 @@ class Miner:
         if is_block:
             self.log.write("FOUND", "*** BLOCK CANDIDATE FOUND - submitting! ***")
         self._send(self.sid, "mining.submit",
-                   [self.user, job.id, en2_hex, job.ntime_hex, PACK_NONCE(nonce).hex()])
+                   [self.user, job.id, en2_hex, job.ntime_hex, nonce_hex(nonce)])
 
     def mine(self):
         seq = -1
@@ -491,6 +501,7 @@ class Miner:
 # self test (Bitcoin genesis block)
 # --------------------------------------------------------------------------- #
 def selftest():
+    # 1) raw header of the Bitcoin genesis block
     header = (struct.pack("<I", 1) + bytes(32) +
               bytes.fromhex("3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a") +
               struct.pack("<III", 1231006505, 0x1D00FFFF, 2083236893))
@@ -498,10 +509,28 @@ def selftest():
     mid.update(header[64:])
     h = hashlib.sha256(mid.digest()).digest()[::-1].hex()
     ok1 = h == "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"
-    ok2 = abs(DIFF1 / nbits_to_target(0x1D00FFFF) - 1.0) < 1e-12
     print("Genesis block hash : %s  [%s]" % (h, "OK" if ok1 else "FAIL"))
-    print("Difficulty of 1d00ffff == 1 : [%s]" % ("OK" if ok2 else "FAIL"))
-    return 0 if ok1 and ok2 else 1
+
+    # 2) same block rebuilt the way a Stratum pool would send it (coinbase split + extranonces)
+    cb = bytes.fromhex(
+        "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4d04ffff001d0104"
+        "455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365"
+        "636f6e64206261696c6f757420666f722062616e6b73ffffffff0100f2052a01000000434104678afdb0fe5548271967"
+        "f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c"
+        "702b6bf11d5fac00000000")
+    en1, en2b = cb[60:64], cb[64:68]
+    job = Job(["t", "00" * 32, cb[:60].hex(), cb[68:].hex(), [], "00000001", "1d00ffff", "495fab29", True])
+    prefix = build_prefix(job, en1, en2b)
+    ok2 = prefix == header[:76]
+    print("Stratum header build: [%s]" % ("OK" if ok2 else "FAIL"))
+
+    # 3) the nonce string a pool expects for the genesis nonce (big-endian hex of the number)
+    ok3 = nonce_hex(2083236893) == "7c2bac1d"
+    print("Share nonce format  : %s  [%s]" % (nonce_hex(2083236893), "OK" if ok3 else "FAIL"))
+
+    ok4 = abs(DIFF1 / nbits_to_target(0x1D00FFFF) - 1.0) < 1e-12
+    print("Difficulty of 1d00ffff == 1 : [%s]" % ("OK" if ok4 else "FAIL"))
+    return 0 if (ok1 and ok2 and ok3 and ok4) else 1
 
 
 # --------------------------------------------------------------------------- #
