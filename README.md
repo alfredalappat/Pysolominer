@@ -1,4 +1,4 @@
-# pysolominer
+# Pysolominer 
 
 A multi-process Bitcoin **solo miner** in pure Python (standard library only). It speaks Stratum v1, works on block templates from a solo pool such as `solo.ckpool.org`, and uses every CPU core. If one of your hashes meets the network target, the pool submits the block and the **entire reward goes to your address**.
 
@@ -33,7 +33,7 @@ python pysolominer.py --url stratum+tcp://POOL_HOST:PORT --user YOUR_BTC_ADDRESS
 
 | Option | Default | Meaning |
 |---|---|---|
-| `--url` | required | Pool, e.g. `stratum+tcp://host:port` |
+| `--url` | required | Pool, e.g. `stratum+tcp://stratum.ckpool.org:3333`,`stratum+tcp://public-pool.io:3333` |
 | `--user` | required | Bitcoin address, optionally `.workername` |
 | `--workers` | all CPU cores | Number of mining processes |
 | `--stats-interval` | 30 | Seconds between stats reports |
@@ -46,12 +46,9 @@ python pysolominer.py --url stratum+tcp://POOL_HOST:PORT --user YOUR_BTC_ADDRESS
 3. Workers scan the 2^32 nonce space, computing double SHA-256 and comparing against the share and network targets.
 4. Hits are sent with `mining.submit`; a hit that meets the network target is a block.
 
-## Testing status
 
-The network layer follows the Stratum v1 spec; test it against your pool and report any pool-specific quirks as issues.
-
-## Donation
+## Donation ⚡️
 
 This is free and open source. If you enjoy it, or you win a block with it, an optional tip is always appreciated:
 
-BTC: bc1qjqmgkuu4qefgwpdq24dvmz60pvjnn7egvc4zke
+👉 BTC: bc1qjqmgkuu4qefgwpdq24dvmz60pvjnn7egvc4zke 
