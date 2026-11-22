@@ -1,54 +1,48 @@
-# Pysolominer 
+# pysolominer
 
-A multi-process Bitcoin **solo miner** in pure Python (standard library only). It speaks Stratum v1, works on block templates from a solo pool such as `solo.ckpool.org`, and uses every CPU core. If one of your hashes meets the network target, the pool submits the block and the **entire reward goes to your address**.
+A tiny, single-threaded **solo Bitcoin miner** in pure Python (Stratum v1, no dependencies).
 
-## The idea: a free Bitcoin lottery
+Think of it as a **digital lottery**: every hash is a ticket, and one lucky hash could win an entire block. It could be your very first hash. **No fee to buy this lottery** - just run it and let it play.
 
-Solo mining is a lottery you play for free. Every hash your CPU computes is a ticket, and every ticket can win, even the very first one. About every 10 minutes the network holds a draw (a new block is found). If one of your tickets wins, you take the entire block reward, paid straight to your address.
 
 
 ## Features
 
-- Stratum v1 client: subscribe, authorize, `mining.notify`, `set_difficulty`, `client.reconnect`, submit
-- SHA-256 midstate optimization (header prefix hashed once per extranonce2)
-- Multi-process workers with distinct extranonce2 lanes (no duplicated work)
-- Immediate switch to new jobs; stale results from dead connections are dropped
-- Readable stats report every 30 seconds: status, uptime, hashrate, pool/network difficulty, shares, per-worker rates
-- Log file (`pysolominer_log.txt`, always next to the script, created if missing) that records everything and is cleared and restarted from the top when it reaches 1 MB (fixed)
-- Automatic reconnect with exponential backoff; TLS support
-- Input validation on pool messages; a bad job can't crash a worker
+- Real Stratum v1 mining with live statistics: pool / network / accepted difficulty, hashrate, shares, best share, block height
+- `CONNECTION LOST` screen and automatic reconnect when the pool connection drops
+- `log.txt` next to the script: created if missing, cleaned and restarted from the top at 5 MB
+- Single thread, standard library only, Python 3.8+ (Windows 10+, Linux, macOS)
 
-## Usage
-
-Python 3.8+, no dependencies.
+## Quick start
 
 ```bash
-python pysolominer.py --url stratum+tcp://POOL_HOST:PORT --user YOUR_BTC_ADDRESS.rig1
-python pysolominer.py --url stratum+tcp://POOL_HOST:PORT --user YOUR_BTC_ADDRESS --workers 4
+python pysolominer.py --address <YOUR_BITCOIN_ADDRESS> --url <POOL>
+python pysolominer.py --selftest   # check hashing against the genesis block
 ```
 
-`--url` is the solo pool you choose (there is no default). `--user` is your Bitcoin address, optionally followed by `.workername`. Double-check it: block rewards go exactly where this says.
+Example pools:
 
-### Options
+```
+stratum.ckpool.org:3333
+stratum+tcp://public-pool.io:3333
+```
 
-| Option | Default | Meaning |
-|---|---|---|
-| `--url` | required | Pool, e.g. `stratum+tcp://stratum.ckpool.org:3333`,`stratum+tcp://public-pool.io:3333` |
-| `--user` | required | Bitcoin address, optionally `.workername` |
-| `--workers` | all CPU cores | Number of mining processes |
-| `--stats-interval` | 30 | Seconds between stats reports |
-| `-v` | off | Show debug lines on the console too |
+## Options
 
-## How it works
+| Option | Description |
+|---|---|
+| `--address` | Your Bitcoin address - any block reward is paid here (prompted if omitted) |
+| `--url` | Pool `host:port`, with or without `stratum+tcp://` (prompted if omitted) |
+| `--worker` | Optional worker name |
+| `--password` | Pool password (default `x`) |
+| `--selftest` | Run the built-in hash test and exit |
 
-1. Pool sends job fields (prevhash, coinbase halves, merkle branch, version, nbits, ntime).
-2. The miner builds `coinbase = coinb1 + extranonce1 + extranonce2 + coinb2`, folds it through the merkle branch, and assembles the 80-byte header.
-3. Workers scan the 2^32 nonce space, computing double SHA-256 and comparing against the share and network targets.
-4. Hits are sent with `mining.submit`; a hit that meets the network target is a block.
+## Donation
 
+If this lottery ever pays out, a donation is welcome but never required:
 
-## Donation ⚡️
+👉 BTC = `bc1qjqmgkuu4qefgwpdq24dvmz60pvjnn7egvc4zke`
 
-This is free and open source. If you enjoy it, or you win a block with it, an optional tip is always appreciated:
+## Disclaimer
 
-👉 BTC: bc1qjqmgkuu4qefgwpdq24dvmz60pvjnn7egvc4zke 
+Use at your own risk, on hardware you own, and check the terms of the pool you connect to. No reward is guaranteed.
