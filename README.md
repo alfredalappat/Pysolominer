@@ -62,5 +62,5 @@ public-pool.io:3333
 
 If this lottery ever pays out, a donation is welcome but never required:
 
-`bc1qjqmgkuu4qefgwpdq24dvmz60pvjnn7egvc4zke`
+👉 BTC = `bc1qjqmgkuu4qefgwpdq24dvmz60pvjnn7egvc4zke`
 
