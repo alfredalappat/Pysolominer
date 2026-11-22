@@ -1,4 +1,4 @@
-# pysolominer
+# Pysolominer
 
 A tiny, single-threaded **solo Bitcoin miner** in pure Python (Stratum v1, no dependencies).
 
