@@ -64,6 +64,10 @@ You can also run pysolominer on Android smartphones using Pydroid 3.
 No root access is required. Install Pydroid 3, set up Python, download the miner, and run it from the terminal.
 Your Android phone can participate in Bitcoin solo mining just like a desktop computer.
 
+## Support the project 
+
+If you find this project useful, please consider giving it a ⭐
+
 ## Donation
 
 If this lottery ever pays out, a donation is welcome but never required:
